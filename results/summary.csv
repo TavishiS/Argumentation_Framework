@@ -1,0 +1,5 @@
+p,instances,strategyproof,sp_fraction,cond_book,cond_book_fraction,q2_book,q3_book,cond_simple,cond_simple_fraction,q2_simple,q3_simple,cond_distinct,cond_distinct_fraction,q2_distinct,q3_distinct
+0.15,1000,544,0.544,38,0.038,0,506,38,0.038,0,506,100,0.1,0,444
+0.25,1000,269,0.269,9,0.009,0,260,9,0.009,0,260,21,0.021,0,248
+0.35,1000,123,0.123,0,0.0,0,123,0,0.0,0,123,2,0.002,0,121
+all,3000,936,0.312,47,0.015666666666666666,0,889,47,0.015666666666666666,0,889,123,0.041,0,813

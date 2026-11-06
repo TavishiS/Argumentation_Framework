@@ -1,0 +1,108 @@
+
+========================================================================
+PART 1 - Figure 5.1 (Examples 5.5, 5.6, 5.8)
+========================================================================
+AF(A={α1, α2, α3, α4, α5}, attacks={α2->α1, α3->α2, α4->α1, α5->α4})
+S = {α3, α5}: conflict-free=True, F(S)={α1, α3, α5}, admissible=True, complete=False
+S = {α3}: conflict-free=True, F(S)={α3, α5}, admissible=True, complete=False
+S = {α1, α3, α5}: conflict-free=True, F(S)={α1, α3, α5}, admissible=True, complete=True
+S = {α1, α3}: conflict-free=True, F(S)={α3, α5}, admissible=False, complete=False
+grounded trace F^k({}): {} -> {α3, α5} -> {α1, α3, α5} -> {α1, α3, α5}
+grounded extension: {α1, α3, α5}
+  grounded    : [{α1, α3, α5}]
+  complete    : [{α1, α3, α5}]
+  preferred   : [{α1, α3, α5}]
+  stable      : [{α1, α3, α5}]
+  semi_stable : [{α1, α3, α5}]
+legal labellings (Definition 5.6):
+   α1=in, α2=out, α3=in, α4=out, α5=in
+acceptance under grounded: {'α1': 'skeptically accepted', 'α2': 'rejected', 'α3': 'skeptically accepted', 'α4': 'rejected', 'α5': 'skeptically accepted'}
+acceptance under preferred: {'α1': 'skeptically accepted', 'α2': 'rejected', 'α3': 'skeptically accepted', 'α4': 'rejected', 'α5': 'skeptically accepted'}
+S={α3,α5} defends α1: True
+
+========================================================================
+PART 1 - Figure 5.2 (Example 5.7)
+========================================================================
+AF(A={α1, α2, α3}, attacks={α1->α2, α2->α1})
+S = {α3}: conflict-free=True, F(S)={α3}, admissible=True, complete=True
+S = {α1, α3}: conflict-free=True, F(S)={α1, α3}, admissible=True, complete=True
+grounded trace F^k({}): {} -> {α3} -> {α3}
+grounded extension: {α3}
+  grounded    : [{α3}]
+  complete    : [{α3}, {α1, α3}, {α2, α3}]
+  preferred   : [{α1, α3}, {α2, α3}]
+  stable      : [{α1, α3}, {α2, α3}]
+  semi_stable : [{α1, α3}, {α2, α3}]
+legal labellings (Definition 5.6):
+   α1=undec, α2=undec, α3=in
+   α1=in, α2=out, α3=in
+   α1=out, α2=in, α3=in
+acceptance under grounded: {'α1': 'rejected', 'α2': 'rejected', 'α3': 'skeptically accepted'}
+acceptance under preferred: {'α1': 'credulously accepted', 'α2': 'credulously accepted', 'α3': 'skeptically accepted'}
+
+========================================================================
+PART 1 - Figure 5.3(i) (grounded extension {a, c, e}, p.188)
+========================================================================
+AF(A={a, b, c, d, e}, attacks={b->a, c->b, c->d, d->b, d->c, e->d})
+grounded trace F^k({}): {} -> {e} -> {c, e} -> {a, c, e} -> {a, c, e}
+grounded extension: {a, c, e}
+  grounded    : [{a, c, e}]
+  complete    : [{a, c, e}]
+  preferred   : [{a, c, e}]
+  stable      : [{a, c, e}]
+  semi_stable : [{a, c, e}]
+legal labellings (Definition 5.6):
+   a=in, b=out, c=in, d=out, e=in
+acceptance under grounded: {'a': 'skeptically accepted', 'b': 'rejected', 'c': 'skeptically accepted', 'd': 'rejected', 'e': 'skeptically accepted'}
+acceptance under preferred: {'a': 'skeptically accepted', 'b': 'rejected', 'c': 'skeptically accepted', 'd': 'rejected', 'e': 'skeptically accepted'}
+
+========================================================================
+PART 2 - Example 5.10: grounded mechanism where hiding pays
+========================================================================
+attacks: α1->α2, α2->α3, α3->α4, α3->α5
+types  : x={α1, α4, α5}; y={α2}; z={α3}
+truthful reports (note: the book's text swaps u_y and u_z; by definition u_y=0, u_z=1):
+  revealed: x={α1, α4, α5}; y={α2}; z={α3}
+  outcome : {α1, α3}  utilities: u_x=1, u_y=0, u_z=1
+x withholds α1:
+  revealed: x={α4, α5}; y={α2}; z={α3}
+  outcome : {α2, α4, α5}  utilities: u_x=2, u_y=1, u_z=0
+x's best responses vs truthful y,z: utility 2, reports [{α4, α5}]
+Theorem 5.3 (strategyproof)? False
+  witness: agent x reports {α4, α5} (utility 1 -> 2)
+Theorem 5.4 condition holds? False - α1 indirectly defeats α4 via odd path α1 -> α2 -> α3 -> α4
+
+========================================================================
+PART 2 - Example 5.11: strategyproof although the Theorem 5.4 condition fails
+========================================================================
+attacks: α1->α2, α2->α3, α3->α4, α3->α5, α6->α3
+types  : x={α1, α4, α5, α6}; y={α2}; z={α3}
+  revealed: x={α1, α4, α5, α6}; y={α2}; z={α3}
+  outcome : {α1, α4, α5, α6}  utilities: u_x=4, u_y=0, u_z=0
+Theorem 5.3 (strategyproof)? True
+Theorem 5.4 condition holds? False - α1 indirectly defeats α4 via α1 -> α2 -> α3 -> α4
+The cancelling argument is α6 (the book's text says α5, a misprint): α6 is unattacked and
+defeats α3, so α3 is never accepted when α6 is revealed.
+Without α6 in x's type (α6 never revealed) we are back to Example 5.10:
+  Theorem 5.3 holds? False
+
+========================================================================
+PART 2 - an instance satisfying the Theorem 5.4 condition
+========================================================================
+attacks: a1->a2, a2->a3; types: x={a1,a3}, y={a2}
+Theorem 5.4 condition: True | Theorem 5.3 (strategyproof): True
+
+========================================================================
+PART 2 - cycles: walks vs simple paths (condition readings)
+========================================================================
+attacks: al->x, x->be, odd cycle x->y->z->x; types: {al,be},{x},{y},{z}
+  mode=book      condition holds: False  (witness al ~> be: al -> x -> y -> z -> x -> be)
+  mode=simple    condition holds: True
+  mode=distinct  condition holds: False  (witness al ~> be: al -> x -> y -> z -> x -> be)
+
+========================================================================
+MINI EXPERIMENT (50 random instances per p, fixed seeds)
+========================================================================
+  p=0.15: strategyproof 28/50, condition holds 2/50, condition-but-manipulable 0
+  p=0.25: strategyproof 11/50, condition holds 1/50, condition-but-manipulable 0
+  p=0.35: strategyproof 10/50, condition holds 0/50, condition-but-manipulable 0
