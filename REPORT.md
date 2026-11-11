@@ -1,132 +1,115 @@
-# Report – Argumentation Engine and Strategic Argumentation
+---
+title: "Assignment 3: Argumentation Engine and Strategic Argumentation"
+author: "B23CS1101, B23CS1069, B23CS1018, B23CM1013"
+geometry: margin=2.2cm
+mainfont: DejaVu Serif
+monofont: DejaVu Sans Mono
+fontsize: 11pt
+---
 
-Source for all definitions and theorems: Rahwan, *Argumentation among Agents*, Ch. 5 (`docs/chapter5.pdf`).
-Every number below is produced by the code in this repository (`results/summary.csv`,
-`results/q2_q3_examples.md`); the experiment is fully reproducible (seed 42).
+All definitions are taken from Rahwan, *Argumentation among Agents*, Chapter 5.
+Code is in `argframe/`, tests in `tests/`, and experiment scripts in `experiments/`.
 
-## 1. What was built
+# Part 1: Argumentation Engine
 
-**Part 1 – engine** (`argframe/framework.py, semantics.py, labelling.py, acceptance.py`)
+| Task | Function |
+|---|---|
+| 1. Framework ⟨A, ⇀⟩ | `ArgumentationFramework(arguments, attacks)` |
+| 2. Conflict-free | `af.is_conflict_free(S)` |
+| 3. S defends a | `af.defends(S, a)` |
+| 4. Characteristic function F(S) | `af.characteristic(S)` |
+| 5. Admissible / complete | `af.is_admissible(S)`, `af.is_complete(S)` |
+| 6A. Grounded extension | `grounded_extension(af)` (iterates F from ∅) |
+| 6B. Complete extensions | `complete_extensions(af)` |
+| 6C. Preferred, stable, semi-stable | `preferred_extensions`, `stable_extensions`, `semi_stable_extensions` |
+| 6D. Legal labellings | `legal_labellings(af)` |
+| 6E. Acceptance status | `acceptance_status(af, a, semantics)` |
 
-* `ArgumentationFramework(A, ⇀)` with `is_conflict_free`, `defends`, `characteristic` (F),
-  `is_admissible`, `is_complete` (Definitions 5.2–5.5).
-* Grounded extension (least fixed point of F by iteration from ∅), all complete extensions
-  (backtracking over conflict-free sets), preferred (⊆-maximal complete), stable (S⁺ = A∖S) and
-  semi-stable (complete with ⊆-maximal S ∪ S⁺) extensions (Definition 5.7).
-* All legal in/out/undec labellings (Definition 5.6), cross-checked against Table 5.1.
-* Skeptical / credulous / rejected status (Definition 5.8) under any of the five semantics.
+## Testing on the book examples
 
-**Part 2 – strategic argumentation** (`argframe/strategic.py`)
+**Figure 5.1** (α2⇀α1, α3⇀α2, α4⇀α1, α5⇀α4)
 
-* `grounded_mechanism`: grounded extension of the framework induced by the union of the revealed sets.
-* `best_responses`: enumerates all 2^|A_i| reports of agent *i* against fixed reports of the others and
-  returns every utility-maximising report.
-* `satisfies_theorem_5_3`: exact, exhaustive strategyproofness test (every agent × every combination
-  of the others' subsets × every hidden subset), returning a concrete profitable deviation when it fails.
-* `theorem_5_4_condition`: the odd-path condition on the full graph. Cycles are handled with a BFS over
-  (vertex, parity) states, which terminates on any graph.
+- S = {α3, α5} is conflict-free and admissible, F(S) = {α1, α3, α5}, so S is not complete.
+- {α1, α3} is not admissible (α4 attacks α1 and is not counter-attacked).
+- Grounded: ∅ → {α3, α5} → {α1, α3, α5}. This is also the only complete, preferred, stable and semi-stable extension.
+- One legal labelling: α1, α3, α5 = in; α2, α4 = out.
+- α1, α3, α5 are skeptically accepted; α2, α4 are rejected.
 
-## 2. Validation
+**Figure 5.2** (α1⇄α2, α3 unattacked)
 
-* 52 unit/property tests (`python3 -m unittest discover -s tests`), all passing.
-* The expected values of Figures 5.1, 5.2, 5.3(i) and Examples 5.5–5.8, 5.10, 5.11 come from the
-  chapter text (or were derived by hand), never from the code's own output. Edge cases: 3-cycle (no
-  stable extension), self-attack, 4-cycle, a framework where preferred ≠ semi-stable, empty framework.
-* Randomised cross-checks on hundreds of random frameworks: complete extensions against brute force over
-  all 2ⁿ subsets; legal labellings against brute force over all 3ⁿ labellings; extensions derived from
-  labellings (Table 5.1) against the direct definitions; the memoised Theorem 5.3 check against a naive
-  one that calls the mechanism every time; odd-walk and odd-simple-path search against exhaustive
-  enumeration.
+- Grounded: {α3}.
+- Complete: {α3}, {α1, α3}, {α2, α3}.
+- Preferred = stable = semi-stable: {α1, α3}, {α2, α3}.
+- Three legal labellings (α1/α2 = undec/undec, in/out, out/in, α3 always in).
+- Under preferred semantics α3 is skeptically accepted, α1 and α2 are credulously accepted. Under grounded semantics α1 and α2 are rejected.
 
-**Misprints in the chapter.** (1) Example 5.10: the utilities of y and z are written with each other's
-argument sets; by the definition u_y = 0 and u_z = 1. (2) After Example 5.11 the text says α5 cancels the
-indirect self-defeat; it is α6 (unattacked, defeats α3). The code and tests follow the definitions.
+**Figure 5.3(i)**: grounded trace ∅ → {e} → {c, e} → {a, c, e}, matching the book.
 
-**Examples from the chapter reproduced** (`python3 demo.py`, `results/demo_output.txt`): grounded
-trace ∅ → {α3,α5} → {α1,α3,α5} (Fig. 5.1); three complete extensions/labellings for Fig. 5.2;
-grounded extension {a,c,e} for Fig. 5.3(i); in Example 5.10 x's unique best response is {α4,α5}
-(utility 2 vs 1), so the mechanism is not strategyproof; Example 5.11 is strategyproof even though the
-Theorem 5.4 condition fails.
+Some extra cases were also checked: 3-cycle (no stable extension), self-attacking argument, 4-cycle (two preferred extensions), a framework where preferred ≠ semi-stable, and the empty framework. Complete extensions and labellings were also compared against brute force on random frameworks. All 52 tests pass.
 
-## 3. Experiment
+# Part 2: Strategic Argumentation
 
-3 agents; n ∈ {6,7,8} arguments uniformly; every ordered pair (including self-attacks) is an attack with
-probability p ∈ {0.15, 0.25, 0.35}; arguments assigned uniformly at random to the 3 agents (redrawn until
-each agent has at least one); 1000 instances per p, 3000 in total. For each instance the exact
-Theorem 5.3 test and the Theorem 5.4 condition were evaluated.
+| Task | Function |
+|---|---|
+| 1. Mechanism | `grounded_mechanism(attacks, reports)` |
+| 2. Best responses | `best_responses(attacks, types, i, reports)` |
+| 3. Theorem 5.3 check | `satisfies_theorem_5_3(attacks, types)` |
+| 4. Theorem 5.4 condition | `theorem_5_4_condition(attacks, types)` |
 
-### Q1 – fraction of strategyproof instances
+The mechanism takes the union of revealed arguments, restricts the attack relation to it, and returns the grounded extension. Utility of agent i is |A_i ∩ outcome|.
 
-| p | instances | strategyproof | fraction | Thm 5.4 condition holds |
+The Theorem 5.3 check is exhaustive: for every agent and every combination of subsets revealed by the other agents, it checks whether revealing all of A_i is a best response.
+
+For Theorem 5.4, the condition fails if some agent has α, β ∈ A_i with an odd-length path α ↪ β in the full graph (an attack inside A_i is a path of length 1). To handle cycles, the search is a BFS over (argument, parity of path length) pairs. Each state is visited once, so it terminates even when the graph has cycles, and odd paths that go around a cycle are also found.
+
+## Book examples
+
+**Example 5.10**: A_x = {α1, α4, α5}, A_y = {α2}, A_z = {α3}. Truthful outcome is {α1, α3}, so u_x = 1. If x hides α1, the outcome is {α2, α4, α5} and u_x = 2. So x's best response is {α4, α5} and the mechanism is not strategyproof. The condition of Theorem 5.4 also fails (α1 → α2 → α3 → α4).
+
+**Example 5.11**: adding α6 ⇀ α3 with α6 ∈ A_x. Now the outcome is {α1, α4, α5, α6} whatever x hides, so it is strategyproof, even though the odd path α1 → α2 → α3 → α4 still exists.
+
+**Misprints found:**
+
+1. Example 5.10: the book swaps u_y and u_z. With A_y = {α2}, A_z = {α3} and outcome {α1, α3}, the correct values are u_y = 0 and u_z = 1.
+2. After Example 5.11: the argument that cancels the indirect self-defeat is α6, not α5. α6 is unattacked and attacks α3, so α3 can never be accepted.
+
+# Experiments
+
+Setup: 3 agents, n ∈ {6, 7, 8} arguments, each ordered pair (self-attacks included) is an attack with probability p ∈ {0.15, 0.25, 0.35}, and arguments are split at random among the agents (each agent gets at least one). 1000 instances per p, 3000 in total, seed 42.
+
+## 1. Fraction of strategyproof instances
+
+| p | Instances | Strategyproof | Fraction | Thm 5.4 condition holds |
 |---|---|---|---|---|
-| 0.15 | 1000 | 544 | **0.544** | 38 (0.038) |
-| 0.25 | 1000 | 269 | **0.269** | 9 (0.009) |
-| 0.35 | 1000 | 123 | **0.123** | 0 (0.000) |
-| all | 3000 | 936 | 0.312 | 47 (0.016) |
+| 0.15 | 1000 | 544 | 0.544 | 38 |
+| 0.25 | 1000 | 269 | 0.269 | 9 |
+| 0.35 | 1000 | 123 | 0.123 | 0 |
+| Total | 3000 | 936 | 0.312 | 47 |
 
-![fraction strategyproof](results/plots/strategyproof_fraction.png)
+![Fraction of strategyproof instances vs p](results/plots/strategyproof_fraction.png){ width=60% }
 
-Strategyproofness becomes rare quickly as the graph gets denser: more attacks create more chains
-α₁ ⇀ … ⇀ α₂ among one agent's arguments, and every such chain is a chance for hiding to pay.
+As p increases there are more attack chains between arguments of the same agent, so there are more chances for an agent to gain by hiding, and the fraction drops.
 
-### Q2 – condition holds but strategyproofness fails
+## 2. Condition holds but not strategyproof
 
-| p | cond holds & SP | cond holds & not SP | cond fails & SP | cond fails & not SP |
+| p | Cond. holds, SP | Cond. holds, not SP | Cond. fails, SP | Cond. fails, not SP |
 |---|---|---|---|---|
-| 0.15 | 38 | **0** | 506 | 456 |
-| 0.25 | 9 | **0** | 260 | 731 |
-| 0.35 | 0 | **0** | 123 | 877 |
-| all | 47 | **0** | 889 | 2064 |
+| 0.15 | 38 | 0 | 506 | 456 |
+| 0.25 | 9 | 0 | 260 | 731 |
+| 0.35 | 0 | 0 | 123 | 877 |
+| Total | 47 | 0 | 889 | 2064 |
 
-**There are no such instances**, under any of the three readings of the condition (`book`, `simple`,
-`distinct`; see README). That is what Theorem 5.4 predicts: the condition is *sufficient* for
-strategyproofness, so it can never hold for a manipulable instance. It is also a useful end-to-end check of
-the implementation: 47 (book reading) instances satisfying the condition were each verified strategyproof
-by the exhaustive Theorem 5.3 search, which shares no code with the path search.
+There are **no** such instances. This matches Theorem 5.4: the condition is sufficient for strategyproofness, so whenever it holds the mechanism must be strategyproof. All 47 instances where the condition holds were confirmed strategyproof by the exhaustive check, which is a separate piece of code from the path search.
 
-The reading matters only a little on random data: `simple` gives exactly the same counts as `book`,
-and `distinct` (which ignores conflict-freeness and α₁ = α₂) holds on 123 instances instead of 47, still
-with zero counterexamples. The readings can differ on specific graphs, e.g. α⇀x⇀β plus an odd cycle
-x⇀y⇀z⇀x, with agents {α,β}, {x}, {y}, {z}: the only simple α→β path has length 2, but an odd *walk*
-(through the cycle, length 5) exists. The `book` and `distinct` readings reject this instance, `simple`
-accepts it (the instance happens to be strategyproof, so no reading is contradicted; this is why the
-code treats cycles via walks).
+## 3. Strategyproof although the condition fails
 
-### Q3 – strategyproof although the condition fails
+There are **889** such instances (506, 260 and 123 for the three values of p). So the condition is not necessary, which is also what Example 5.11 shows.
 
-889 of 3000 instances (29.6%; 52.6% / 26.2% / 12.3% of the condition-failing instances for
-p = 0.15 / 0.25 / 0.35). So the condition is far from necessary, as the chapter says with Example 5.11.
-Why they are strategyproof (full list: `results/q2_q3_examples.md`):
+- **884 instances** fail the condition only because of a direct attack between two arguments of the same agent (or a self-attack). Hiding the attacker frees the attacked argument but loses the attacker itself, so the agent gains nothing.
+  - p = 0.15, #158: only attack a2 ⇀ a6, both owned by x. Hiding a2 gets a6 accepted but loses a2, so u_x stays 3.
+  - p = 0.15, #9: a3 ⇀ a5 and a5 ⇀ a5, both owned by x. a5 attacks itself so it is never accepted, and hiding a3 only loses a3.
+- **5 instances** have only an indirect odd path. In these, the same agent also has an even path to the target (it defends its own argument), so the two effects cancel.
+  - p = 0.25, #804: A_z = {a1, a6}, attacks a2⇀a1, a4⇀a2, a4⇀a3, a6⇀a2, a6⇀a4. The path a6 → a4 → a2 → a1 is odd, but a6 also attacks a2 directly. Truthful u_z = 2. If z hides a6, a4 comes in but a4 still attacks a2, so a1 stays accepted and z just loses a6 (u_z = 1).
+- Among the 889 instances, 5 have a cancelling argument like α6 in Example 5.11: an unattacked argument of the agent that keeps the middle argument out no matter what is hidden.
 
-* **884 instances violate the condition through an explicit conflict inside one agent's own type**
-  (an attack between two of its arguments, or a self-attack). An internal conflict does not by itself make
-  hiding profitable, because hiding one of two conflicting arguments gives up the argument that was
-  hidden to free the other: at best a tie. The recorded reasons (an instance can have several):
-  hiding only ever lowers utility (407); hiding frees one of the agent's own arguments but costs at least
-  as many others (385); hiding never changes the agent's utility (92); and 5 contain a cancelling argument
-  in the sense of Example 5.11.
-  * Instance p=0.15 #158: only attack a2⇀a6, with a2, a6 ∈ A_x. a6 is out; hiding a2 frees a6 but loses
-    a2 (3 → 3, a tie); hiding a6 changes nothing (it is out anyway); hiding a1 or a4 loses an accepted
-    argument.
-  * Instance p=0.15 #9: a3⇀a5, a5⇀a5 with a3, a5 ∈ A_x. a5 is never accepted, so hiding it changes
-    nothing, and hiding a3 loses it.
-* **5 instances have only an indirect odd path** (every type conflict-free), e.g. p=0.25 #804 with
-  A_z = {a1, a6} and attacks a2⇀a1, a4⇀a2, a4⇀a3, a6⇀a2, a6⇀a4. Path a6 ⇀ a4 ⇀ a2 ⇀ a1 is odd, so the
-  condition fails, but a6 also defeats a2 directly (even path a6 ⇀ a2 ⇀ a1: a6 *defends* a1). Truthfully
-  both are accepted (u_z = 2). Against truthful x and y, hiding a6 lets a4 in, but a4 still defeats a2, so a1 stays in and z only
-  loses a6 (u = 1). In all five cases the best deviation only lowers utility; in four of them walks of
-  both parities link the violating pair (the fifth is a closed odd walk a2 → a7 → a8 → a2), so attack
-  and defence effects can cancel.
-* **Example 5.11** is the textbook case: x holds α1, α4, α5, α6 with α1 ↪ α4, α1 ↪ α5, yet α6 (unattacked,
-  defeats α3, wrongly called α5 in the text) keeps α3 out whatever is revealed, so α1, α4, α5 are accepted
-  regardless and x's best response is to reveal everything. Removing α6 gives back Example 5.10, which is
-  manipulable.
-
-## 4. Limitations
-
-* Only 6–8 arguments and 3 agents, as specified; fractions have a sampling error of up to about ±3 percentage points
-  (95% interval, 1000 instances per p).
-* Types are a partition of the arguments in the experiment; the code also accepts overlapping types.
-* "Explicit conflict" vs "indirect only" in Q3 is classified from the graph; the "reason" tags
-  are computed by exhaustive enumeration of the agent's deviations, but they are descriptions of
-  the observed behaviour, not proofs.
+The full list of these instances is in `results/q2_q3_examples.md`.
